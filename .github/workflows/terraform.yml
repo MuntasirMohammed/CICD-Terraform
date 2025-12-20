@@ -1,0 +1,73 @@
+name: "Terraform AWS"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch: # Allows you to run this manually from the GitHub UI
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  # Pulling secrets from GitHub Settings > Secrets and variables > Actions
+  AWS_ACCESS_KEY_ID: ${{ secrets.MY_AWS_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.MY_SECRET_KEY }}
+  AWS_REGION: "ca-central-1"
+
+jobs:
+  validate:
+    name: "Validate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init
+      - run: terraform validate
+
+  plan:
+    name: "Plan"
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init
+      - run: terraform plan -out="planfile"
+      
+      # Uploading the plan file so the next job can download it
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: planfile
+
+  apply:
+    name: "Apply"
+    needs: plan
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Only apply on main branch
+    # To make this "Manual", you should use GitHub Environments (see below)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init
+      
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+
+      - run: terraform apply -auto-approve planfile
+
+  destroy:
+    name: "Destroy"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' # Only runs when manually triggered
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init
+      - run: terraform destroy --auto-approve
