@@ -1,4 +1,4 @@
-<img src="https://i.imgur.com/KzHnU3A.png" height="30%" width="30%" alt="CICD-Terraform">
+<img src="https://i.imgur.com/CoZfd7J.jpeg" height="10%" width="10%" alt="CICD-Terraform">
 <h1>Multi-Platform Terraform CI/CD Pipeline (AWS)</h1>
 This repository demonstrates a complete Infrastructure as Code (IaC) lifecycle using Terraform to deploy a VPC and EC2 architecture on AWS. The project highlights the automation of infrastructure through two major CI/CD platforms: GitLab CI/CD and GitHub Actions.
 
